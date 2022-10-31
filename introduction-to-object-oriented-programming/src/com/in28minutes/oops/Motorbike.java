@@ -3,6 +3,12 @@ package com.in28minutes.oops;
 public class Motorbike {
 	// state
 	private int speed;
+	
+	Motorbike(){} // 기본 생성자
+	
+	Motorbike(int speed){
+		this.speed = speed;
+	}
 
 	public int getSpeed() {
 		return speed;
