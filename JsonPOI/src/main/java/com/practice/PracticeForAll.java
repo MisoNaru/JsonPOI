@@ -10,115 +10,113 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class PracticeForAll {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws IOException {
         String clientId = "GUaWvVMcEKIocayHZo3l"; //애플리케이션 클라이언트 아이디
         String clientSecret = "209scpyuN0"; //애플리케이션 클라이언트 시크릿
 
         String[] diseaseCode_14 = {"copd", "기관지염", "만성기관지", "만성폐쇄성", "패색성폐질환", "폐기종", "폐쇄성질환", "폐쇄성폐질환"};
-
+        List<JSONArray> data = null;
+        String[] blogArray = null;
         String responseBlog = null;
         String text = null;
-//        JSONParser jsonParser = null;
-//        JSONObject jsonObjectBlog = null;
 
         /* 엑셀 */
         XSSFWorkbook workbook = null;
         XSSFSheet sheet = null;
         XSSFRow row = null;
         XSSFCell cell = null;
+        try {
+            workbook = new XSSFWorkbook();
+            sheet = workbook.createSheet("블로그");
 
-        for (int i = 0; i < diseaseCode_14.length; i++) {
-            try {
-                text = URLEncoder.encode(diseaseCode_14[i], "UTF-8");
-            } catch (Exception e) {
-                throw new RuntimeException("검색어 인코딩 실패", e);
-            }
-
-            String texts = URLDecoder.decode(text, "UTF-8");
-
-            String apiURL = "https://openapi.naver.com/v1/search/blog?query=" + text + "&sort=date&display=2";    // JSON 결과
-            Map<String, String> requestHeaders = new HashMap<>();
-            requestHeaders.put("X-Naver-Client-Id", clientId);
-            requestHeaders.put("X-Naver-Client-Secret", clientSecret);
-            responseBlog = get(apiURL, requestHeaders);
-
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-            Calendar time = Calendar.getInstance();
-            String datetime = sdf.format(time.getTime());
-
-            System.out.println("texts:" + texts);
-
-//            System.out.println("*****************************************************************************");
-//            System.out.println("responseBlog:"+responseBlog);
-
-            JSONParser jsonParser = new JSONParser();
-            JSONObject jsonObject = (JSONObject) jsonParser.parse(responseBlog);
-            JSONArray items = (JSONArray) jsonObject.get("items");
-            System.out.println("*****************************************************************************");
-            System.out.println("items:" + items);
-
-
-            for (int j = 0; j < items.size(); j++) {
-                JSONObject blogObject = (JSONObject) items.get(j);
-
-                String SnsID = (String) blogObject.get("link");
-                SnsID = SnsID.substring(SnsID.lastIndexOf("/") + 1);
-
-                String bloggerlink = (String) blogObject.get("bloggerlink");
-                bloggerlink = bloggerlink.substring(bloggerlink.lastIndexOf("/") + 1);
-
-                String bloggername = (String) blogObject.get("bloggername");
-                bloggername = bloggername.substring(bloggername.lastIndexOf("/") + 1);
-
-                String title = (String) blogObject.get("title");
-                String description = (String) blogObject.get("description");
-                String link = (String) blogObject.get("link");
-                String postdate = (String) blogObject.get("postdate");
-                String postDateTime = postdate + "0000";
-
-                LocalDate now = LocalDate.now();
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
-                now.format(formatter);
-
-//                System.out.println("*****************************************************************************");
-//                System.out.println("blogObject:"+blogObject);
-//                System.out.println("*****************************************************************************");
-
-                System.out.println("SnsID:" + SnsID);
-                System.out.println("bloggerlink:" + bloggerlink);
-                System.out.println("bloggername:" + bloggername);
-                System.out.println("title:" + title);
-                System.out.println("description:" + description);
-                System.out.println("link:" + link);
-                System.out.println("now:" + LocalDate.now().format(formatter).toString());
-                System.out.println("itemsize:" + LocalDate.now().format(formatter).toString());
-
-                /* 오늘 날짜와 동일한 postdate만 뽑기 */
-                if (Objects.equals(postdate, now.format(formatter).toString())) {
-                    System.out.println("postdate:" + postdate);
+            for (int i = 0; i < diseaseCode_14.length; i++) {
+                try {
+                    text = URLEncoder.encode(diseaseCode_14[i], "UTF-8");
+                } catch (Exception e) {
+                    throw new RuntimeException("검색어 인코딩 실패", e);
                 }
-                /* 오늘 날짜와 동일한 postdatetime만 뽑기 */
-                if (Objects.equals(postDateTime.substring(0, 8), now.format(formatter).toString())) {
-                    System.out.println("postDateTime:" + postDateTime);
-                }
+                String texts = URLDecoder.decode(text, "UTF-8");
+
+                String apiURL = "https://openapi.naver.com/v1/search/blog?query=" + text + "&sort=date&display=2";    // JSON 결과
+                Map<String, String> requestHeaders = new HashMap<>();
+                requestHeaders.put("X-Naver-Client-Id", clientId);
+                requestHeaders.put("X-Naver-Client-Secret", clientSecret);
+                responseBlog = get(apiURL, requestHeaders);
+
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+                Calendar time = Calendar.getInstance();
+                String datetime = sdf.format(time.getTime());
+
+                System.out.println("texts:" + texts);
+
+                JSONParser jsonParser = new JSONParser();
+                JSONObject jsonObject = (JSONObject) jsonParser.parse(responseBlog);
+                JSONArray items = (JSONArray) jsonObject.get("items");
                 System.out.println("*****************************************************************************");
+                System.out.println("items:" + items);
+                System.out.println("items_size:" + items.size());
+
+                for (int j = 0; j < items.size(); j++) {
+
+                    JSONObject blogObject = (JSONObject) items.get(j);
+
+                    String SnsID = (String) blogObject.get("link");
+                    SnsID = SnsID.substring(SnsID.lastIndexOf("/") + 1);
+
+                    String bloggerlink = (String) blogObject.get("bloggerlink");
+                    bloggerlink = bloggerlink.substring(bloggerlink.lastIndexOf("/") + 1);
+
+                    String bloggername = (String) blogObject.get("bloggername");
+                    bloggername = bloggername.substring(bloggername.lastIndexOf("/") + 1);
+
+                    String title = (String) blogObject.get("title");
+                    String description = (String) blogObject.get("description");
+                    String link = (String) blogObject.get("link");
+                    String postdate = (String) blogObject.get("postdate");
+                    String postDateTime = postdate + "0000";
+
+                    LocalDate now = LocalDate.now();
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
+                    now.format(formatter);
+
+                    data.add(items);
+
+                    System.out.println(data);
+
+                    /* 오늘 날짜와 동일한 postdate만 뽑기 */
+                    if (Objects.equals(postdate, now.format(formatter).toString())) {
+
+                        System.out.println("SnsID:" + SnsID);
+                        System.out.println("bloggerlink:" + bloggerlink);
+                        System.out.println("bloggername:" + bloggername);
+                        System.out.println("title:" + title);
+                        System.out.println("description:" + description);
+                        System.out.println("link:" + link);
+                        System.out.println("now:" + LocalDate.now().format(formatter).toString());
+                        System.out.println("itemsize:" + LocalDate.now().format(formatter).toString());
+                        System.out.println("postdate:" + postdate);
+                        System.out.println("postDateTime:" + postDateTime);
+                    }
+                    System.out.println("*****************************************************************************");
+                }
             }
+//            File xlsFile = new File("/Users/misonaru/Desktop/test20.xls");
+//            FileOutputStream fileOut = new FileOutputStream(xlsFile);
+//            workbook.write(fileOut);
+        } catch (Exception e) {
+            System.out.println("에러");
+            e.printStackTrace();
         }
+
     }
 
     private static String readBody(InputStream body) {
